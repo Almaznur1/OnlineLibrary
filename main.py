@@ -2,16 +2,30 @@ import requests
 from pathlib import Path
 
 
-Path('./books').mkdir(parents=True, exist_ok=True)
-book_id = 32168
+def check_for_redirect(response):
+    if response.history:
+        raise requests.HTTPError
 
-for _ in range(10):
-    url = f'https://tululu.org/txt.php?id={str(book_id)}'
-    response = requests.get(url)
-    response.raise_for_status()
 
-    filename = f'books/book_{book_id}.txt'
-    with open(filename, 'wb') as file:
-        file.write(response.content)
+def main():
+    Path('./books').mkdir(parents=True, exist_ok=True)
+    book_id = 0
 
-    book_id += 1
+    for _ in range(10):
+        book_id += 1
+        payload = {'id': book_id}
+        url = 'https://tululu.org/txt.php'
+        try:
+            response = requests.get(url, params=payload)
+            response.raise_for_status()
+            check_for_redirect(response)
+        except requests.HTTPError:
+            continue
+        
+        filename = f'books/id{book_id}.txt'
+        with open(filename, 'wb') as file:
+            file.write(response.content)
+
+
+if __name__ == '__main__':
+    main()

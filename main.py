@@ -32,6 +32,30 @@ def download_image(url, folder='images/'):
         file.write(response.content)
 
 
+def parse_book_page(response, book_id):
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    title_tag = soup.find('div', id='content').find('h1')
+    title_end_index = title_tag.text.index('::')
+    title = f'{book_id}. {title_tag.text[:title_end_index].strip()}'
+
+    image = soup.find('div', class_='bookimage').find('img')['src']
+    image_url = urljoin('https://tululu.org/', image)
+
+    comment_tags = soup.find_all('div', class_='texts')
+    comments = [comment_tag.span.text for comment_tag in comment_tags]
+
+    genres_tag = soup.find('span', class_='d_book').find_all('a')
+    genres = [genre_tag.text for genre_tag in genres_tag]
+    book = {
+        'title': title,
+        'image_url': image_url,
+        'comments': comments,
+        'genres': genres,
+    }
+    return book
+
+
 def main():
     Path('./books').mkdir(parents=True, exist_ok=True)
     Path('./images').mkdir(parents=True, exist_ok=True)
@@ -48,22 +72,9 @@ def main():
         except requests.HTTPError:
             continue
 
-        soup = BeautifulSoup(response.text, 'lxml')
-        title_tag = soup.find('div', id='content').find('h1')
-        title_end_index = title_tag.text.index('::')
-        title = f'{book_id}. {title_tag.text[:title_end_index].strip()}'
-
-        image = soup.find('div', class_='bookimage').find('img')['src']
-        image_url = urljoin('https://tululu.org/', image)
-
-        comment_tags = soup.find_all('div', class_='texts')
-        comments = [comment_tag.span.text for comment_tag in comment_tags]
-
-        genres_tag = soup.find('span', class_='d_book').find_all('a')
-        genres = [genre_tag.text for genre_tag in genres_tag]
-
-        download_txt(book_url, title)
-        download_image(image_url)
+        book = parse_book_page(response, book_id)
+        download_txt(book_url, book['title'])
+        download_image(book['image_url'])
 
 
 if __name__ == '__main__':

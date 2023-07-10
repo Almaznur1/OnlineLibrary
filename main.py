@@ -56,6 +56,9 @@ def main():
         image = soup.find('div', class_='bookimage').find('img')['src']
         image_url = urljoin('https://tululu.org/', image)
 
+        comment_tags = soup.find_all('div', class_='texts')
+        comments = [comment_tag.span.text for comment_tag in comment_tags]
+
         download_txt(book_url, title)
         download_image(image_url)
 

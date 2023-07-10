@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import os
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse, unquote
+import argparse
 
 
 def check_for_redirect(url):
@@ -39,6 +40,8 @@ def parse_book_page(response, book_id):
     title_end_index = title_tag.text.index('::')
     title = f'{book_id}. {title_tag.text[:title_end_index].strip()}'
 
+    author = title_tag.text[title_end_index + 2:].strip()
+
     image = soup.find('div', class_='bookimage').find('img')['src']
     image_url = urljoin('https://tululu.org/', image)
 
@@ -49,6 +52,7 @@ def parse_book_page(response, book_id):
     genres = [genre_tag.text for genre_tag in genres_tag]
     book = {
         'title': title,
+        'author': author,
         'image_url': image_url,
         'comments': comments,
         'genres': genres,
@@ -57,11 +61,27 @@ def parse_book_page(response, book_id):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description='download books from https://tululu.org')
+    parser.add_argument('start_id',
+                        nargs='?',
+                        default=1,
+                        type=int,
+                        help='put here the first book id')
+    parser.add_argument('end_id',
+                        nargs='?',
+                        default=10,
+                        type=int,
+                        help='put here the last book id')
+    args = parser.parse_args()
+
+    book_id = args.start_id - 1
+    books_count = args.end_id - book_id
+
     Path('./books').mkdir(parents=True, exist_ok=True)
     Path('./images').mkdir(parents=True, exist_ok=True)
-    book_id = 0
 
-    for _ in range(10):
+    for _ in range(books_count):
         book_id += 1
         book_page = f'https://tululu.org/b{book_id}/'
         book_url = f'https://tululu.org/txt.php?id={book_id}'
@@ -75,6 +95,9 @@ def main():
         book = parse_book_page(response, book_id)
         download_txt(book_url, book['title'])
         download_image(book['image_url'])
+
+        print('Название:', book['title'])
+        print('Автор:', book['author'], '\n')
 
 
 if __name__ == '__main__':

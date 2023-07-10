@@ -3,7 +3,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 import os
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin, urlparse, urlsplit
+from urllib.parse import urljoin, urlparse, unquote
 
 
 def check_for_redirect(url):
@@ -25,7 +25,7 @@ def download_txt(url, filename, folder='books/'):
 def download_image(url, folder='images/'):
     response = requests.get(url)
     response.raise_for_status()
-    path = urlparse(url).path
+    path = urlparse(unquote(url)).path
     image = path[path.rfind('/') + 1:]
     filepath = os.path.join(folder, image)
     with open(filepath, 'wb') as file:
@@ -58,6 +58,9 @@ def main():
 
         comment_tags = soup.find_all('div', class_='texts')
         comments = [comment_tag.span.text for comment_tag in comment_tags]
+
+        genres_tag = soup.find('span', class_='d_book').find_all('a')
+        genres = [genre_tag.text for genre_tag in genres_tag]
 
         download_txt(book_url, title)
         download_image(image_url)

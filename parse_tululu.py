@@ -76,7 +76,7 @@ def main():
     Path('./images').mkdir(parents=True, exist_ok=True)
 
     for book_id in range(args.start_id, args.end_id + 1):
-        book_page = f'https://tululu.org/b{book_id}/'
+        book_page_url = f'https://tululu.org/b{book_id}/'
         book_url = 'https://tululu.org/txt.php'
         params = {'id': book_id}
 
@@ -84,7 +84,7 @@ def main():
             response = requests.get(book_url, params=params)
             response.raise_for_status()
             check_for_redirect(response)
-            response = requests.get(book_page)
+            response = requests.get(book_page_url)
             response.raise_for_status()
             check_for_redirect(response)
         except requests.HTTPError:

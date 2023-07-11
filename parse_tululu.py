@@ -7,12 +7,9 @@ from urllib.parse import urljoin, urlparse, unquote
 import argparse
 
 
-def check_for_redirect(url, params={}):
-    response = requests.get(url, params=params)
-    response.raise_for_status()
+def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
-    return response
 
 
 def download_txt(url, params, filename, folder='books/'):
@@ -84,8 +81,12 @@ def main():
         params = {'id': book_id}
 
         try:
-            response = check_for_redirect(book_page)
-            check_for_redirect(book_url, params)
+            response = requests.get(book_url, params=params)
+            response.raise_for_status()
+            check_for_redirect(response)
+            response = requests.get(book_page)
+            response.raise_for_status()
+            check_for_redirect(response)
         except requests.HTTPError:
             continue
 

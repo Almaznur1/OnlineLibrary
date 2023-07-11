@@ -7,16 +7,16 @@ from urllib.parse import urljoin, urlparse, unquote
 import argparse
 
 
-def check_for_redirect(url):
-    response = requests.get(url)
+def check_for_redirect(url, params={}):
+    response = requests.get(url, params=params)
     response.raise_for_status()
     if response.history:
         raise requests.HTTPError
     return response
 
 
-def download_txt(url, filename, folder='books/'):
-    response = requests.get(url)
+def download_txt(url, params, filename, folder='books/'):
+    response = requests.get(url, params=params)
     response.raise_for_status()
     filepath = f'{os.path.join(folder, sanitize_filename(filename))}.txt'
     with open(filepath, 'wb') as file:
@@ -80,16 +80,17 @@ def main():
 
     for book_id in range(args.start_id, args.end_id + 1):
         book_page = f'https://tululu.org/b{book_id}/'
-        book_url = f'https://tululu.org/txt.php?id={book_id}'
+        book_url = 'https://tululu.org/txt.php'
+        params = {'id': book_id}
 
         try:
             response = check_for_redirect(book_page)
-            check_for_redirect(book_url)
+            check_for_redirect(book_url, params)
         except requests.HTTPError:
             continue
 
         book = parse_book_page(response, book_id)
-        download_txt(book_url, book['title'])
+        download_txt(book_url, params, book['title'])
         download_image(book['image_url'])
 
         print('Название:', book['title'])

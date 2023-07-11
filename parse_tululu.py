@@ -75,14 +75,10 @@ def main():
                         help='put here the last book id')
     args = parser.parse_args()
 
-    book_id = args.start_id - 1
-    books_count = args.end_id - book_id
-
     Path('./books').mkdir(parents=True, exist_ok=True)
     Path('./images').mkdir(parents=True, exist_ok=True)
 
-    for _ in range(books_count):
-        book_id += 1
+    for book_id in range(args.start_id, args.end_id + 1):
         book_page = f'https://tululu.org/b{book_id}/'
         book_url = f'https://tululu.org/txt.php?id={book_id}'
 

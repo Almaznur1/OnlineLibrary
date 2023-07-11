@@ -30,7 +30,7 @@ def download_image(url, folder='images/'):
         file.write(response.content)
 
 
-def parse_book_page(response, book_id):
+def parse_book_page(book_page_url, response, book_id):
     soup = BeautifulSoup(response.text, 'lxml')
 
     title_tag = soup.find('div', id='content').find('h1')
@@ -40,7 +40,7 @@ def parse_book_page(response, book_id):
     author = title_tag.text[title_end_index + 2:].strip()
 
     image = soup.find('div', class_='bookimage').find('img')['src']
-    image_url = urljoin('https://tululu.org/', image)
+    image_url = urljoin(book_page_url, image)
 
     comment_tags = soup.find_all('div', class_='texts')
     comments = [comment_tag.span.text for comment_tag in comment_tags]
@@ -90,7 +90,7 @@ def main():
         except requests.HTTPError:
             continue
 
-        book = parse_book_page(response, book_id)
+        book = parse_book_page(book_page_url, response, book_id)
         download_txt(book_url, params, book['title'])
         download_image(book['image_url'])
 

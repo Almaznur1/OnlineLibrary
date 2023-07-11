@@ -15,6 +15,10 @@ def check_for_redirect(response):
 def download_txt(url, params, filename, folder='books/'):
     response = requests.get(url, params=params)
     response.raise_for_status()
+    try:
+        check_for_redirect(response)
+    except requests.HTTPError:
+        return
     filepath = f'{os.path.join(folder, sanitize_filename(filename))}.txt'
     with open(filepath, 'wb') as file:
         file.write(response.content)
@@ -81,9 +85,6 @@ def main():
         params = {'id': book_id}
 
         try:
-            response = requests.get(book_url, params=params)
-            response.raise_for_status()
-            check_for_redirect(response)
             response = requests.get(book_page_url)
             response.raise_for_status()
             check_for_redirect(response)

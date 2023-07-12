@@ -5,6 +5,8 @@ import os
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse, unquote
 import argparse
+import sys
+import time
 
 
 def check_for_redirect(response):
@@ -15,10 +17,7 @@ def check_for_redirect(response):
 def download_txt(url, params, filename, folder='books/'):
     response = requests.get(url, params=params)
     response.raise_for_status()
-    try:
-        check_for_redirect(response)
-    except requests.HTTPError:
-        return
+    check_for_redirect(response)
     filepath = f'{os.path.join(folder, sanitize_filename(filename))}.txt'
     with open(filepath, 'wb') as file:
         file.write(response.content)
@@ -88,12 +87,19 @@ def main():
             response = requests.get(book_page_url)
             response.raise_for_status()
             check_for_redirect(response)
-        except requests.HTTPError:
+            book = parse_book_page(book_page_url, response, book_id)
+            download_txt(book_url, params, book['title'])
+            download_image(book['image_url'])
+        except requests.exceptions.HTTPError:
+            print(f'Кажется книга №{book_id} недоступна для скачивания. '
+                  'Переходим к следующей\n', file=sys.stderr)
             continue
-
-        book = parse_book_page(book_page_url, response, book_id)
-        download_txt(book_url, params, book['title'])
-        download_image(book['image_url'])
+        except requests.exceptions.ConnectionError:
+            print('Возникли проблемы с сетью! Проверьте ваше соединение. '
+                  'Мы попробуем скачать следующую книгу через 10 секунд',
+                  file=sys.stderr)
+            time.sleep(10)
+            continue
 
         print('Название:', book['title'])
         print('Автор:', book['author'], '\n')

@@ -11,16 +11,23 @@ from parse_tululu import download_image, download_txt, check_for_redirect
 def fetch_fantasy_books_url_with_id():
     base_url = 'https://tululu.org/'
     book_pages_url_with_id = []
+
     for page in range(1, 5):
         url = f'https://tululu.org/l55/{page}'
         response = requests.get(url)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'lxml')
-        books = soup.find('div', id='content').find_all('table')
+        books = soup.select('div#content table a[href^="/b"]')
+
+        temp_books_id = []
 
         for book in books:
-            book_id = book.find('a')['href']
+            book_id = book['href']
+            if book_id in temp_books_id:
+                continue
+            else:
+                temp_books_id.append(book_id)
             book_page_url = urljoin(base_url, book_id)
             book_pages_url_with_id.append((book_page_url, book_id[2:-1]))
 
@@ -30,24 +37,24 @@ def fetch_fantasy_books_url_with_id():
 def parse_book_page(book_page_url, response):
     soup = BeautifulSoup(response.text, 'lxml')
 
-    title_tag = soup.find('div', id='content').find('h1')
-    title_end_index = title_tag.text.index('::')
-    title = title_tag.text[:title_end_index].strip()
+    title_tag = soup.select_one('div#content h1').text
+    title_end_index = title_tag.index('::')
+    title = title_tag[:title_end_index].strip()
 
-    author = title_tag.text[title_end_index + 2:].strip()
+    author = title_tag[title_end_index + 2:].strip()
 
-    image = soup.find('div', class_='bookimage').find('img')['src']
+    image = soup.select_one('div.bookimage img')['src']
     image_url = urljoin(book_page_url, image)
 
     temporary_path = urlparse(unquote(image_url)).path
     img_scr = f'images/{temporary_path[temporary_path.rfind("/") + 1:]}'
 
-    book_path = f'{title}.txt'
+    book_path = f'books/{title}.txt'
 
-    comment_tags = soup.find_all('div', class_='texts')
-    comments = [comment_tag.span.text for comment_tag in comment_tags]
+    comment_tags = soup.select('div.texts span')
+    comments = [comment_tag.text for comment_tag in comment_tags]
 
-    genres_tag = soup.find('span', class_='d_book').find_all('a')
+    genres_tag = soup.select('span.d_book a')
     genres = [genre_tag.text for genre_tag in genres_tag]
     book = {
         'title': title,

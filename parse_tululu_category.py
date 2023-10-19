@@ -73,24 +73,36 @@ def main():
     parser = argparse.ArgumentParser(
         description='download fantasy books from https://tululu.org')
     parser.add_argument('--start_page',
-                        nargs='?',
-                        default=1,
                         type=int,
+                        default=1,
                         help='put here start page number')
     parser.add_argument('--end_page',
-                        nargs='?',
-                        default=702,
                         type=int,
+                        default=702,
                         help='put here end page number')
+    parser.add_argument('--dest_folder',
+                        type=str,
+                        default='.',
+                        help='specify the destination folder')
+    parser.add_argument('--skip_txt',
+                        action='store_true',
+                        help='download without txt files')
+    parser.add_argument('--skip_imgs',
+                        action='store_true',
+                        help='download without images')
+
     args = parser.parse_args()
 
-    Path('./books').mkdir(parents=True, exist_ok=True)
-    Path('./images').mkdir(parents=True, exist_ok=True)
+    Path(args.dest_folder).mkdir(parents=True, exist_ok=True)
+    if not args.skip_txt:
+        books_folder = Path(f'{args.dest_folder}/books')
+        books_folder.mkdir(parents=True, exist_ok=True)
+    if not args.skip_imgs:
+        images_folder = Path(f'{args.dest_folder}/images')
+        images_folder.mkdir(parents=True, exist_ok=True)
 
-    start_page = args.start_page
-    end_page = args.end_page
-    book_pages_url_with_id = fetch_fantasy_books_url_with_id(start_page,
-                                                             end_page)
+    book_pages_url_with_id = fetch_fantasy_books_url_with_id(args.start_page,
+                                                             args.end_page)
     book_url = 'https://tululu.org/txt.php'
     books = []
 
@@ -101,8 +113,10 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             book = parse_book_page(book_page_url, response)
-            download_txt(book_url, params, book['title'])
-            download_image(book['image_url'])
+            if not args.skip_txt:
+                download_txt(book_url, params, book['title'], books_folder)
+            if not args.skip_imgs:
+                download_image(book['image_url'], images_folder)
             books.append(book)
 
         except requests.exceptions.HTTPError:
@@ -118,7 +132,7 @@ def main():
             continue
 
     books_json = json.dumps(books, ensure_ascii=False)
-    with open('books.json', 'w', encoding='utf8') as file:
+    with open(f'{args.dest_folder}/books.json', 'w', encoding='utf8') as file:
         file.write(books_json)
 
 

@@ -40,7 +40,7 @@ python parse_tululu_category.py
 
 Чтобы задать страницы для скачивания, определите дополнительные параметры `--start_page` и `--end_page`:
 ```
-parse_tululu_category.py --start_page 50 `--end_page` 55
+parse_tululu_category.py --start_page 50 --end_page 55
 ```
 скачает все книги на страницах 50-55 включительно.
 

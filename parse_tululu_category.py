@@ -5,14 +5,15 @@ from pathlib import Path
 import time
 import sys
 import json
+import argparse
 from parse_tululu import download_image, download_txt, check_for_redirect
 
 
-def fetch_fantasy_books_url_with_id():
+def fetch_fantasy_books_url_with_id(start_page, end_page):
     base_url = 'https://tululu.org/'
     book_pages_url_with_id = []
 
-    for page in range(1, 5):
+    for page in range(start_page, end_page):
         url = f'https://tululu.org/l55/{page}'
         response = requests.get(url)
         response.raise_for_status()
@@ -69,10 +70,27 @@ def parse_book_page(book_page_url, response):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description='download fantasy books from https://tululu.org')
+    parser.add_argument('--start_page',
+                        nargs='?',
+                        default=1,
+                        type=int,
+                        help='put here start page number')
+    parser.add_argument('--end_page',
+                        nargs='?',
+                        default=702,
+                        type=int,
+                        help='put here end page number')
+    args = parser.parse_args()
+
     Path('./books').mkdir(parents=True, exist_ok=True)
     Path('./images').mkdir(parents=True, exist_ok=True)
 
-    book_pages_url_with_id = fetch_fantasy_books_url_with_id()
+    start_page = args.start_page
+    end_page = args.end_page
+    book_pages_url_with_id = fetch_fantasy_books_url_with_id(start_page,
+                                                             end_page)
     book_url = 'https://tululu.org/txt.php'
     books = []
 
@@ -83,21 +101,23 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             book = parse_book_page(book_page_url, response)
-            books.append(book)
             download_txt(book_url, params, book['title'])
             download_image(book['image_url'])
+            books.append(book)
+
         except requests.exceptions.HTTPError:
             print(f'Кажется книга №{book_id} недоступна для скачивания. '
                   'Переходим к следующей\n', file=sys.stderr)
             continue
+
         except requests.exceptions.ConnectionError:
             print('Возникли проблемы с сетью! Проверьте ваше соединение. '
                   'Мы попробуем скачать следующую книгу через 10 секунд',
                   file=sys.stderr)
             time.sleep(10)
             continue
-    books_json = json.dumps(books, ensure_ascii=False)
 
+    books_json = json.dumps(books, ensure_ascii=False)
     with open('books.json', 'w', encoding='utf8') as file:
         file.write(books_json)
 

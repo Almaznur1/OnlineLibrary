@@ -1,6 +1,10 @@
 # Парсер книг с сайта tululu.org
 
-Скрипт предназначен для парсинга и скачивания книг с сайта [tululu.org](https://tululu.org)
+Программа предназначена для парсинга и скачивания книг с сайта [tululu.org](https://tululu.org)
+
+Состоит из 2 скриптов:
+* `parse_tululu.py` - скачивает книги по id
+* `parse_tululu_category.py` - скачивает книги по категориям
 
 ### Как установить
 
@@ -11,7 +15,9 @@ Python3 должен быть уже установлен.
 pip install -r requirements.txt
 ```
 
-### Запуск
+## Запуск
+
+### `parse_tululu.py`
 
 Запустите файл `parse_tululu.py` для скачивания книг:
 ```
@@ -23,6 +29,36 @@ python parse_tululu.py
 ```
 python parse_tululu.py 20 30
 ```
+
+### `parse_tululu_category.py`
+
+Запустите файл `parse_tululu_category.py` для скачивания книг жанра фантастика:
+```
+python parse_tululu_category.py
+```
+По умолчанию скрипт скачивает все книги раздела.
+
+Чтобы задать страницы для скачивания, определите дополнительные параметры `--start_page` и `--end_page`:
+```
+parse_tululu_category.py --start_page 50 `--end_page` 55
+```
+скачает все книги на страницах 50-55 включительно.
+
+Вы можете определить директорию для сохранения файлов через параметр `--dest_folder`:
+```
+parse_tululu_category.py --dest_folder library
+```
+создаст папку library и скачает в нее книги.
+
+Если вам не требуется обложка или сам текстовый файл, можете запустить скрипт с параметром `--skip_imgs` или `--skip_txt`:
+```
+parse_tululu_category.py --skip_imgs
+```
+скачает книги без обложек.
+```
+parse_tululu_category.py --skip_txt
+```
+скачает книги без txt.
 
 ### Цель проекта
 

@@ -78,7 +78,7 @@ def main():
                         help='put here start page number')
     parser.add_argument('--end_page',
                         type=int,
-                        default=702,
+                        default=701,
                         help='put here end page number')
     parser.add_argument('--dest_folder',
                         type=str,
@@ -102,7 +102,7 @@ def main():
         images_folder.mkdir(parents=True, exist_ok=True)
 
     book_pages_url_with_id = fetch_fantasy_books_url_with_id(args.start_page,
-                                                             args.end_page)
+                                                             args.end_page + 1)
     book_url = 'https://tululu.org/txt.php'
     books = []
 

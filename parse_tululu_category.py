@@ -17,6 +17,12 @@ def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
         url = f'https://tululu.org/l55/{page_number}'
         response = requests.get(url)
         response.raise_for_status()
+        try:
+            check_for_redirect(response)
+        except requests.exceptions.HTTPError:
+            print(f'Кажется страницы №{page_number} не существует. '
+                  'Переходим к следующей\n', file=sys.stderr)
+            continue
 
         soup = BeautifulSoup(response.text, 'lxml')
         books = soup.select('div#content table a[href^="/b"]')

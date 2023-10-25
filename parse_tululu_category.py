@@ -9,30 +9,31 @@ import argparse
 from parse_tululu import download_image, download_txt, check_for_redirect
 
 
-def fetch_fantasy_books_url_with_id(start_page, end_page):
+def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
     base_url = 'https://tululu.org/'
-    book_pages_url_with_id = []
+    book_page_urls_with_ids = []
 
-    for page in range(start_page, end_page):
-        url = f'https://tululu.org/l55/{page}'
+    for page_number in range(start_page_number, end_page_number):
+        url = f'https://tululu.org/l55/{page_number}'
         response = requests.get(url)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'lxml')
         books = soup.select('div#content table a[href^="/b"]')
 
-        temp_books_id = []
+        temp_book_paths = []
 
         for book in books:
-            book_id = book['href']
-            if book_id in temp_books_id:
+            book_path = book['href']
+            if book_path in temp_book_paths:
                 continue
             else:
-                temp_books_id.append(book_id)
-            book_page_url = urljoin(base_url, book_id)
-            book_pages_url_with_id.append((book_page_url, book_id[2:-1]))
+                temp_book_paths.append(book_path)
+            book_page_url = urljoin(base_url, book_path)
+            book_id = book_path[2:-1]
+            book_page_urls_with_ids.append((book_page_url, book_id))
 
-    return book_pages_url_with_id
+    return book_page_urls_with_ids
 
 
 def parse_book_page(book_page_url, response):

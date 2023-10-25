@@ -14,13 +14,19 @@ def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
 
     for page_number in range(start_page_number, end_page_number):
         url = f'https://tululu.org/l55/{page_number}'
-        response = requests.get(url)
-        response.raise_for_status()
         try:
+            response = requests.get(url)
+            response.raise_for_status()
             check_for_redirect(response)
         except requests.exceptions.HTTPError:
             print(f'Кажется страницы №{page_number} не существует. '
                   'Переходим к следующей.\n', file=sys.stderr)
+            continue
+        except requests.exceptions.ConnectionError:
+            print('Возникли проблемы с сетью! Проверьте ваше соединение. '
+                  'Мы попробуем открыть следующую страницу через 10 секунд',
+                  file=sys.stderr)
+            time.sleep(10)
             continue
 
         soup = BeautifulSoup(response.text, 'lxml')
@@ -101,10 +107,11 @@ def main():
         images_folder = Path(f'{args.dest_folder}/images')
         images_folder.mkdir(parents=True, exist_ok=True)
 
-    book_pages_url_with_id = fetch_fantasy_books_url_with_id(args.start_page,
-                                                             args.end_page + 1)
     book_url = 'https://tululu.org/txt.php'
     books = []
+
+    book_pages_url_with_id = fetch_fantasy_books_url_with_id(args.start_page,
+                                                             args.end_page + 1)
 
     for book_page_url, book_id in book_pages_url_with_id:
         params = {'id': book_id}

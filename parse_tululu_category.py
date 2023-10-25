@@ -10,7 +10,7 @@ from parse_tululu import download_image, download_txt, check_for_redirect
 
 
 def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
-    book_page_urls_with_ids = []
+    book_page_urls_with_ids = set()
 
     for page_number in range(start_page_number, end_page_number):
         url = f'https://tululu.org/l55/{page_number}'
@@ -20,23 +20,17 @@ def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
             check_for_redirect(response)
         except requests.exceptions.HTTPError:
             print(f'Кажется страницы №{page_number} не существует. '
-                  'Переходим к следующей\n', file=sys.stderr)
+                  'Переходим к следующей.\n', file=sys.stderr)
             continue
 
         soup = BeautifulSoup(response.text, 'lxml')
         books = soup.select('div#content table a[href^="/b"]')
 
-        temp_book_paths = []
-
         for book in books:
             book_path = book['href']
-            if book_path in temp_book_paths:
-                continue
-            else:
-                temp_book_paths.append(book_path)
             book_page_url = urljoin(url, book_path)
             book_id = book_path[2:-1]
-            book_page_urls_with_ids.append((book_page_url, book_id))
+            book_page_urls_with_ids.add((book_page_url, book_id))
 
     return book_page_urls_with_ids
 

@@ -10,7 +10,6 @@ from parse_tululu import download_image, download_txt, check_for_redirect
 
 
 def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
-    base_url = 'https://tululu.org/'
     book_page_urls_with_ids = []
 
     for page_number in range(start_page_number, end_page_number):
@@ -35,7 +34,7 @@ def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
                 continue
             else:
                 temp_book_paths.append(book_path)
-            book_page_url = urljoin(base_url, book_path)
+            book_page_url = urljoin(url, book_path)
             book_id = book_path[2:-1]
             book_page_urls_with_ids.append((book_page_url, book_id))
 

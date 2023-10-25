@@ -6,7 +6,8 @@ import time
 import sys
 import json
 import argparse
-from parse_tululu import download_image, download_txt, check_for_redirect
+from parse_tululu import (download_image, download_txt, check_for_redirect,
+                          parse_book_page)
 
 
 def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
@@ -39,40 +40,6 @@ def fetch_fantasy_books_url_with_id(start_page_number, end_page_number):
             book_page_urls_with_ids.add((book_page_url, book_id))
 
     return book_page_urls_with_ids
-
-
-def parse_book_page(book_page_url, response):
-    soup = BeautifulSoup(response.text, 'lxml')
-
-    title_tag = soup.select_one('div#content h1').text
-    title_end_index = title_tag.index('::')
-    title = title_tag[:title_end_index].strip()
-
-    author = title_tag[title_end_index + 2:].strip()
-
-    image = soup.select_one('div.bookimage img')['src']
-    image_url = urljoin(book_page_url, image)
-
-    temporary_path = urlparse(unquote(image_url)).path
-    img_scr = f'images/{temporary_path[temporary_path.rfind("/") + 1:]}'
-
-    book_path = f'books/{title}.txt'
-
-    comment_tags = soup.select('div.texts span')
-    comments = [comment_tag.text for comment_tag in comment_tags]
-
-    genres_tag = soup.select('span.d_book a')
-    genres = [genre_tag.text for genre_tag in genres_tag]
-    book = {
-        'title': title,
-        'author': author,
-        'image_url': image_url,
-        'img_scr': img_scr,
-        'book_path': book_path,
-        'comments': comments,
-        'genres': genres,
-    }
-    return book
 
 
 def main():

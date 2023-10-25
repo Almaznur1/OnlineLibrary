@@ -33,27 +33,34 @@ def download_image(url, folder='images/'):
         file.write(response.content)
 
 
-def parse_book_page(book_page_url, response, book_id):
+def parse_book_page(book_page_url, response):
     soup = BeautifulSoup(response.text, 'lxml')
 
-    title_tag = soup.find('div', id='content').find('h1')
-    title_end_index = title_tag.text.index('::')
-    title = f'{book_id}. {title_tag.text[:title_end_index].strip()}'
+    title_tag = soup.select_one('div#content h1').text
+    title_end_index = title_tag.index('::')
+    title = title_tag[:title_end_index].strip()
 
-    author = title_tag.text[title_end_index + 2:].strip()
+    author = title_tag[title_end_index + 2:].strip()
 
-    image = soup.find('div', class_='bookimage').find('img')['src']
+    image = soup.select_one('div.bookimage img')['src']
     image_url = urljoin(book_page_url, image)
 
-    comment_tags = soup.find_all('div', class_='texts')
-    comments = [comment_tag.span.text for comment_tag in comment_tags]
+    temporary_path = urlparse(unquote(image_url)).path
+    img_scr = f'images/{temporary_path[temporary_path.rfind("/") + 1:]}'
 
-    genres_tag = soup.find('span', class_='d_book').find_all('a')
+    book_path = f'books/{title}.txt'
+
+    comment_tags = soup.select('div.texts span')
+    comments = [comment_tag.text for comment_tag in comment_tags]
+
+    genres_tag = soup.select('span.d_book a')
     genres = [genre_tag.text for genre_tag in genres_tag]
     book = {
         'title': title,
         'author': author,
         'image_url': image_url,
+        'img_scr': img_scr,
+        'book_path': book_path,
         'comments': comments,
         'genres': genres,
     }
@@ -87,7 +94,7 @@ def main():
             response = requests.get(book_page_url)
             response.raise_for_status()
             check_for_redirect(response)
-            book = parse_book_page(book_page_url, response, book_id)
+            book = parse_book_page(book_page_url, response)
             download_txt(book_url, params, book['title'])
             download_image(book['image_url'])
         except requests.exceptions.HTTPError:

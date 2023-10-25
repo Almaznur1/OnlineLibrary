@@ -105,9 +105,8 @@ def main():
             time.sleep(10)
             continue
 
-    books_json = json.dumps(books, ensure_ascii=False)
     with open(f'{args.dest_folder}/books.json', 'w', encoding='utf8') as file:
-        file.write(books_json)
+        json.dump(books, file, ensure_ascii=False)
 
 
 if __name__ == '__main__':
